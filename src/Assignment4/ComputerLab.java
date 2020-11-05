@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 
+/**
+ * Risolvere il problema della simulazione del Laboratorio di informatica,
+ * assegnato nella lezione precedente, utilizzando il costrutto di Monitor
+ */
+
 public class ComputerLab {
     final static int labCapacity = 20;
     final static int labUsers = 50;
