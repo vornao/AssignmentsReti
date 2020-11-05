@@ -35,7 +35,8 @@ class PiCalc implements Runnable{
     private double pi = 0;
     private int count = 0;
 
-    //constructor method: sets accuracy
+    //constructor m
+    //method: sets accuracy
     public PiCalc(Double acc){
         this.k = acc;
     }
