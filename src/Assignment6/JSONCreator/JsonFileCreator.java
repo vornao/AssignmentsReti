@@ -23,7 +23,6 @@ public class JsonFileCreator {
 
 
     public static void main(String[] args) throws IOException {
-
         WritableByteChannel fileChannel = FileChannel.open(
                 Paths.get("Accounts.json"),
                 StandardOpenOption.WRITE,
