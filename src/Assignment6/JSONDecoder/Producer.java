@@ -1,5 +1,7 @@
 package Assignment6.JSONDecoder;
 
 public class Producer {
-    public Producer(SynchronizedAccountList<>)
+    public Producer(SynchronizedAccountList list){
+
+    }
 }
