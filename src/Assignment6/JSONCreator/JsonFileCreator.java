@@ -12,7 +12,8 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class JsonFileCreator {
-
+    private static final int ACCOUNTS = 100;
+    private static final int PAYMENTS = 100;
     private static final String[] firstNames = { "Jacob", "Helena", "Marco", "Giulia", "Henry", "Sheldon", "Amy", "Howard", "Martha",
                                     "Giovanni", "Lisa", "Abigale", "Mohamed", "Salvatore", "Ilaria", "Gianluigi", "Paolo",
                                     "Davide","Susanna", "Pedro", "Rosa", "Sara"};
@@ -33,7 +34,7 @@ public class JsonFileCreator {
         ObjectMapper objectMapper = new ObjectMapper();
         Random random = new Random();
 
-        int accountNumber = random.nextInt(100);
+        int accountNumber = random.nextInt(ACCOUNTS);
         for(int i = 0; i < accountNumber; i++) {
             accounts.add(createRandomAccount());
         }
@@ -51,12 +52,12 @@ public class JsonFileCreator {
                       + " " +
                       lastNames[random.nextInt(lastNames.length)];
 
-        Account a = new Account(name);
-        int payments = random.nextInt(100);
+        Account a = new Account(name, new ArrayList<>());
+        int payments = random.nextInt(PAYMENTS);
 
         for(int i = 0; i < payments; i++){
-            String date = (1 + random.nextInt(31)) + "/" + (1 + random.nextInt(13)) + "/200" + random.nextInt(3);
-            a.addPayment(new Payment(date, random.nextInt(4)));
+            String date = (1 + random.nextInt(31)) + "/" + (1 + random.nextInt(12)) + "/200" + random.nextInt(4);
+            a.addPayment(new Payment(date, random.nextInt(5)));
         }
         return a;
     }
