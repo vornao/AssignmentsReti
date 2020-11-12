@@ -7,8 +7,7 @@ import java.util.StringTokenizer;
 
 public class RequestHandler implements Runnable {
     private Socket clientSocket;
-    private StringBuilder requestBuilder;
-    private final String basePath = "./www/";
+
     public RequestHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
     }
@@ -37,7 +36,7 @@ public class RequestHandler implements Runnable {
         }
 
         try {
-            sendResponseAndClose(requestLine, clientSocket);
+            sendResponse(requestLine, clientSocket);
             inFromClient.close();
             clientSocket.close();
         } catch (IOException e) {
@@ -46,7 +45,7 @@ public class RequestHandler implements Runnable {
 
     }
 
-    private void sendResponseAndClose(String requestLine, Socket clientSocket) throws IOException {
+    private void sendResponse(String requestLine, Socket clientSocket) throws IOException {
         OutputStream outToClient = clientSocket.getOutputStream();
         StringTokenizer tokenizer = new StringTokenizer(requestLine, "/ ");
         String extension;
@@ -56,6 +55,7 @@ public class RequestHandler implements Runnable {
             requestLineToArray.add(tokenizer.nextToken());
         }
         System.out.println(requestLineToArray.get(1));
+        String basePath = "./www/";
         if(requestLineToArray.get(1).equals("HTTP")) {
             requestLine = basePath + "index.html";
         }else{
