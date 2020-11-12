@@ -1,11 +1,8 @@
 package Assignment7;
 
-import jdk.nashorn.internal.runtime.RewriteException;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +23,8 @@ public class HTTPServer {
             System.out.println("failed to start http server");
             System.exit(-1);
         }
+        System.out.println("HTTP SERVER STARTED PORT: " + PORT);
+        System.out.println("connect to http://localhost:" + PORT);
 
         LinkedBlockingQueue<Runnable> requestQueue = new LinkedBlockingQueue<>(8);
         ThreadPoolExecutor clientExecutor = new ThreadPoolExecutor(COREPOOLSIZE, MAXIMUMPOOLSIZE, KEEPALIVETIME, TimeUnit.SECONDS, requestQueue);

@@ -15,8 +15,9 @@ public class RequestHandler implements Runnable {
     @Override
     public void run() {
         System.out.println("client connected " + Thread.currentThread().toString());
-        BufferedReader inFromClient = null;
-        OutputStream outToClient = null;
+        BufferedReader inFromClient;
+        String requestLine;
+
         try {
             inFromClient = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         } catch (IOException e) {
@@ -24,7 +25,6 @@ public class RequestHandler implements Runnable {
             return;
         }
 
-        String requestLine;
         while (true) {
             try {
                 if (!(requestLine = inFromClient.readLine()).isEmpty()){
@@ -46,27 +46,31 @@ public class RequestHandler implements Runnable {
     }
 
     private void sendResponse(String requestLine, Socket clientSocket) throws IOException {
+
         OutputStream outToClient = clientSocket.getOutputStream();
         StringTokenizer tokenizer = new StringTokenizer(requestLine, "/ ");
+        StringBuilder responseHeaders;
         String extension;
+        final String basePath = "./www/";
+
         ArrayList<String> requestLineToArray = new ArrayList<>();
 
         while(tokenizer.hasMoreTokens()){
             requestLineToArray.add(tokenizer.nextToken());
         }
-        System.out.println(requestLineToArray.get(1));
-        String basePath = "./www/";
+
         if(requestLineToArray.get(1).equals("HTTP")) {
-            requestLine = basePath + "index.html";
-        }else{
-            requestLine = basePath + requestLineToArray.get(1);
+            requestLineToArray.add(1, "index.html");
         }
+
+        requestLine = basePath + requestLineToArray.get(1);
 
         int index = requestLineToArray.get(1).indexOf(".");
         extension = requestLineToArray.get(1).substring(index);
 
         File requestedFile = new File(requestLine);
-        FileInputStream fileInputStream = null;
+        FileInputStream fileInputStream;
+
         try{
             fileInputStream = new FileInputStream(requestedFile);
         } catch (FileNotFoundException e){
@@ -74,7 +78,9 @@ public class RequestHandler implements Runnable {
             outToClient.write(fileNotFoundMessageBuilder());
             return;
         }
-        StringBuilder responseHeaders =  new StringBuilder( "HTTP/1.1 200 OK\r\n" + "Server: SampleJavaServer\r\n");
+
+        System.out.println("Providing resource: " + requestedFile);
+        responseHeaders =  new StringBuilder( "HTTP/1.1 200 OK\r\n" + "Server: SampleJavaServer\r\n");
 
         switch (extension){
             case ".txt":
@@ -99,10 +105,10 @@ public class RequestHandler implements Runnable {
 
             assert outToClient != null;
 
-            fileInputStream.read(responseContent);
+            if(fileInputStream.read(responseContent) == -1) throw new IOException("Failed to read file.");
+
             outToClient.write(responseHeaders.toString().getBytes());
             outToClient.write(responseContent);
-            System.out.println("Response sent to client");
             outToClient.close();
 
         } catch (IOException e) {
