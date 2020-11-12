@@ -14,7 +14,7 @@ public class RequestHandler implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("client connected " + Thread.currentThread().toString());
+        System.out.println("Client connected. (" + Thread.currentThread().toString() + ")");
         BufferedReader inFromClient;
         String requestLine;
 
@@ -42,7 +42,7 @@ public class RequestHandler implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        System.out.println("Client disconnectet.");
     }
 
     private void sendResponse(String requestLine, Socket clientSocket) throws IOException {
@@ -65,19 +65,21 @@ public class RequestHandler implements Runnable {
 
         requestLine = basePath + requestLineToArray.get(1);
 
-        int index = requestLineToArray.get(1).indexOf(".");
-        extension = requestLineToArray.get(1).substring(index);
-
         File requestedFile = new File(requestLine);
         FileInputStream fileInputStream;
 
         try{
             fileInputStream = new FileInputStream(requestedFile);
         } catch (FileNotFoundException e){
-            e.printStackTrace();
+            System.out.println("404 File not found!");
             outToClient.write(fileNotFoundMessageBuilder());
             return;
         }
+
+        int index = requestLineToArray.get(1).indexOf(".");
+        extension = requestLineToArray.get(1).substring(index);
+
+
 
         System.out.println("Providing resource: " + requestedFile);
         responseHeaders =  new StringBuilder( "HTTP/1.1 200 OK\r\n" + "Server: SampleJavaServer\r\n");
@@ -105,7 +107,11 @@ public class RequestHandler implements Runnable {
 
             assert outToClient != null;
 
-            if(fileInputStream.read(responseContent) == -1) throw new IOException("Failed to read file.");
+            if(fileInputStream.read(responseContent) == -1) {
+                System.out.println("Failed to read file.");
+                outToClient.close();
+                return;
+            }
 
             outToClient.write(responseHeaders.toString().getBytes());
             outToClient.write(responseContent);
@@ -114,6 +120,7 @@ public class RequestHandler implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     private byte[] fileNotFoundMessageBuilder(){
