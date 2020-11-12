@@ -1,55 +1,121 @@
 package Assignment7;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 public class RequestHandler implements Runnable {
     private Socket clientSocket;
     private StringBuilder requestBuilder;
-
-    public RequestHandler(Socket clientSocket){
+    private final String basePath = "./www/";
+    public RequestHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
     }
 
     @Override
     public void run() {
         System.out.println("client connected " + Thread.currentThread().toString());
-        BufferedReader inFromClient;
-        OutputStream outForClient;
+        BufferedReader inFromClient = null;
+        OutputStream outToClient = null;
         try {
             inFromClient = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
             return;
         }
 
-        /**
-         * [HTTP REQUEST EXAMPLE TO PARSE]
-         *
-         * GET / HTTP/1.1
-         * Host: localhost:8080
-         * Upgrade-Insecure-Requests: 1
-         * Accept: text/html,application/xhtml+xml,application/xml;q=0.9;
-         * User - Agent:Mozilla / 5.0 (Macintosh; Intel Mac OS X 10_15_6)AppleWebKit
-         * Accept - Language:en - gb
-         * Accept - Encoding:gzip, deflate
-         * Connection:keep - alive
-         */
-
-        requestBuilder = new StringBuilder();
-        String requestLine = null;
-        while(true){
+        String requestLine;
+        while (true) {
             try {
-
-                if (!(requestLine = inFromClient.readLine()).isEmpty()) break;
+                if (!(requestLine = inFromClient.readLine()).isEmpty()){
+                    break;
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            requestBuilder.append(requestLine).append("\r\n");
         }
-        System.out.println(requestLine);
+
+        try {
+            sendResponseAndClose(requestLine, clientSocket);
+            inFromClient.close();
+            clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
+
+    private void sendResponseAndClose(String requestLine, Socket clientSocket) throws IOException {
+        OutputStream outToClient = clientSocket.getOutputStream();
+        StringTokenizer tokenizer = new StringTokenizer(requestLine, "/ ");
+        String extension;
+        ArrayList<String> requestLineToArray = new ArrayList<>();
+
+        while(tokenizer.hasMoreTokens()){
+            requestLineToArray.add(tokenizer.nextToken());
+        }
+        System.out.println(requestLineToArray.get(1));
+        if(requestLineToArray.get(1).equals("HTTP")) {
+            requestLine = basePath + "index.html";
+        }else{
+            requestLine = basePath + requestLineToArray.get(1);
+        }
+
+        int index = requestLineToArray.get(1).indexOf(".");
+        extension = requestLineToArray.get(1).substring(index);
+
+        File requestedFile = new File(requestLine);
+        FileInputStream fileInputStream = null;
+        try{
+            fileInputStream = new FileInputStream(requestedFile);
+        } catch (FileNotFoundException e){
+            e.printStackTrace();
+            outToClient.write(fileNotFoundMessageBuilder());
+            return;
+        }
+        StringBuilder responseHeaders =  new StringBuilder( "HTTP/1.1 200 OK\r\n" + "Server: SampleJavaServer\r\n");
+
+        switch (extension){
+            case ".txt":
+                responseHeaders.append("Content-Type: text/plain\r\n");
+                break;
+            case ".jpg":
+                responseHeaders.append("Content-Type: image/jpeg\r\n");
+                break;
+            case ".html":
+                responseHeaders.append("Content-Type: text/html\r\n");
+                break;
+            case ".gif":
+                responseHeaders.append("Content-Type: image/gif\r\n");
+                break;
+            default:
+                break;
+        }
+
+        try {
+            responseHeaders.append("\r\n");
+            byte[] responseContent = new byte[(int)requestedFile.length()];
+
+            assert outToClient != null;
+
+            fileInputStream.read(responseContent);
+            outToClient.write(responseHeaders.toString().getBytes());
+            outToClient.write(responseContent);
+            System.out.println("Response sent to client");
+            outToClient.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private byte[] fileNotFoundMessageBuilder(){
+        String message = "HTTP/1.1 404 Not Found\r\n" + "Server: SampleJavaServer\r\n" +
+                "Content-Type: text/html\r\n\r\n" +
+                "<h1>ERROR 404&nbsp;</h1>\n" +
+                "<p>Not Found</p>";
+        return message.getBytes();
+    }
+
 }
