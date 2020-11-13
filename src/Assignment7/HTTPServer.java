@@ -19,7 +19,7 @@ public class HTTPServer {
         if(args.length != 2){
             System.out.println("Usage: -$java ./HTTPServer <PORT> <FILES PATH>");
         }
-        BASEPATH = args[1];
+        BASEPATH = args[1] + "/";
         PORT = Integer.parseInt(args[0]);
 
         ServerSocket serverSocket = null;

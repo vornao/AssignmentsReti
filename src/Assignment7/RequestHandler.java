@@ -70,7 +70,7 @@ public class RequestHandler implements Runnable {
         //read requested content file
         File requestedFile = new File(requestLine);
         FileInputStream fileInputStream;
-
+        System.out.println(requestedFile);
         try{
             fileInputStream = new FileInputStream(requestedFile);
         } catch (FileNotFoundException e){
