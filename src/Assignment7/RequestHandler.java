@@ -52,7 +52,7 @@ public class RequestHandler implements Runnable {
         String extension;
 
         //base path to look for contents
-        final String basePath = "./www/";
+        final String basePath = HTTPServer.BASEPATH;
 
         ArrayList<String> requestLineToArray = new ArrayList<>();
 

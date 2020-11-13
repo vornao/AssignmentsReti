@@ -9,12 +9,19 @@ import java.util.concurrent.TimeUnit;
 
 public class HTTPServer {
 
-    private static final int PORT = 6789;
+    private static int PORT = 6789;
     private static final int COREPOOLSIZE = 4;
     private static final int MAXIMUMPOOLSIZE = 26;
     private static final int KEEPALIVETIME = 20;
+    static String BASEPATH;
 
     public static void main(String[] args) throws IOException {
+        if(args.length != 2){
+            System.out.println("Usage: -$java ./HTTPServer <PORT> <FILES PATH>");
+        }
+        BASEPATH = args[1];
+        PORT = Integer.parseInt(args[0]);
+
         ServerSocket serverSocket = null;
         try {
             serverSocket = new ServerSocket(PORT);
@@ -24,6 +31,7 @@ public class HTTPServer {
             System.exit(-1);
         }
         System.out.println("HTTP SERVER STARTED PORT: " + PORT);
+        System.out.println("FILES DIRECTORY: " + BASEPATH);
         System.out.println("connect to http://localhost:" + PORT);
 
         LinkedBlockingQueue<Runnable> requestQueue = new LinkedBlockingQueue<>(8);
