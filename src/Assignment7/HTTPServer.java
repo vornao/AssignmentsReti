@@ -29,6 +29,7 @@ public class HTTPServer {
         LinkedBlockingQueue<Runnable> requestQueue = new LinkedBlockingQueue<>(8);
         ThreadPoolExecutor clientExecutor = new ThreadPoolExecutor(COREPOOLSIZE, MAXIMUMPOOLSIZE, KEEPALIVETIME, TimeUnit.SECONDS, requestQueue);
 
+        //every client is handled by a thread in the threadpool
         while(true){
             try{
                 Socket client = serverSocket.accept();

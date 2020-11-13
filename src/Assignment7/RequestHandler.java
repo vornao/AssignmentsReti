@@ -15,18 +15,14 @@ public class RequestHandler implements Runnable {
     @Override
     public void run() {
         System.out.println("Client connected. (" + Thread.currentThread().toString() + ")");
+
+        //used to read request
         BufferedReader inFromClient;
         String requestLine;
 
-        try {
-            inFromClient = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-
         while (true) {
             try {
+                inFromClient = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 if (!(requestLine = inFromClient.readLine()).isEmpty()){
                     break;
                 }
@@ -47,10 +43,15 @@ public class RequestHandler implements Runnable {
 
     private void sendResponse(String requestLine, Socket clientSocket) throws IOException {
 
+        //used to send data to client
         OutputStream outToClient = clientSocket.getOutputStream();
+
+        //needed to tokenize requestLine and get request needed from client, as well as file extension
         StringTokenizer tokenizer = new StringTokenizer(requestLine, "/ ");
         StringBuilder responseHeaders;
         String extension;
+
+        //base path to look for contents
         final String basePath = "./www/";
 
         ArrayList<String> requestLineToArray = new ArrayList<>();
@@ -59,28 +60,33 @@ public class RequestHandler implements Runnable {
             requestLineToArray.add(tokenizer.nextToken());
         }
 
+        //if request file is null, redirect to ./www/index.html
         if(requestLineToArray.get(1).equals("HTTP")) {
             requestLineToArray.add(1, "index.html");
         }
 
         requestLine = basePath + requestLineToArray.get(1);
 
+        //read requested content file
         File requestedFile = new File(requestLine);
         FileInputStream fileInputStream;
 
         try{
             fileInputStream = new FileInputStream(requestedFile);
         } catch (FileNotFoundException e){
+
+            //if not found send 404 page to client, and return
             System.out.println("404 File not found!");
             outToClient.write(fileNotFoundMessageBuilder());
             return;
         }
 
+        //gathering file extension to specify content type
         int index = requestLineToArray.get(1).indexOf(".");
         extension = requestLineToArray.get(1).substring(index);
 
 
-
+        //building headers start
         System.out.println("Providing resource: " + requestedFile);
         responseHeaders =  new StringBuilder( "HTTP/1.1 200 OK\r\n" + "Server: SampleJavaServer\r\n");
 
@@ -100,11 +106,13 @@ public class RequestHandler implements Runnable {
             default:
                 break;
         }
+        responseHeaders.append("\r\n");
+        //end of headers building
+
 
         try {
-            responseHeaders.append("\r\n");
-            byte[] responseContent = new byte[(int)requestedFile.length()];
 
+            byte[] responseContent = new byte[(int)requestedFile.length()];
             assert outToClient != null;
 
             if(fileInputStream.read(responseContent) == -1) {
@@ -113,6 +121,7 @@ public class RequestHandler implements Runnable {
                 return;
             }
 
+            //sending everything to client
             outToClient.write(responseHeaders.toString().getBytes());
             outToClient.write(responseContent);
             outToClient.close();
@@ -123,6 +132,7 @@ public class RequestHandler implements Runnable {
 
     }
 
+    //html string builder for 404 error
     private byte[] fileNotFoundMessageBuilder(){
         String message = "HTTP/1.1 404 Not Found\r\n" + "Server: SampleJavaServer\r\n" +
                 "Content-Type: text/html\r\n\r\n" +
