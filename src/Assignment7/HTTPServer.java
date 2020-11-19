@@ -47,9 +47,6 @@ public class HTTPServer {
                 clientExecutor.submit(new RequestHandler(client));
             }catch (IOException e){
                 e.printStackTrace();
-                clientExecutor.shutdownNow();
-                serverSocket.close();
-                return;
             }
             count++;
         }
