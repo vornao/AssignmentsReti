@@ -37,15 +37,23 @@ public class HTTPServer {
         LinkedBlockingQueue<Runnable> requestQueue = new LinkedBlockingQueue<>(8);
         ThreadPoolExecutor clientExecutor = new ThreadPoolExecutor(COREPOOLSIZE, MAXIMUMPOOLSIZE, KEEPALIVETIME, TimeUnit.SECONDS, requestQueue);
 
+        int count = 0;
         //every client is handled by a thread in the threadpool
-        while(true){
+        //waits for 20 clients before shutting down
+        //change while statement to true in order to accept unlimited requests.
+        while(count < 20){
             try{
                 Socket client = serverSocket.accept();
                 clientExecutor.submit(new RequestHandler(client));
             }catch (IOException e){
                 e.printStackTrace();
+                clientExecutor.shutdownNow();
+                serverSocket.close();
+                return;
             }
+            count++;
         }
-
+        clientExecutor.shutdown();
+        serverSocket.close();
     }
 }
