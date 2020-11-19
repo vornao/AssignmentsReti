@@ -1,5 +1,7 @@
 package Assignment7;
 
+import Assignment2.Server;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -16,12 +18,16 @@ public class HTTPServer {
     static String BASEPATH;
 
     public static void main(String[] args) throws IOException {
-        if(args.length != 2){
-            System.out.println("Usage: -$java ./HTTPServer <PORT> <FILES PATH>");
+        if(args.length < 2){
+            System.out.println("Usage: -$java ./HTTPServer <PORT> <FILES PATH> <REQUESTS_BEFORE_SHUTDOWN> (optional, leave blank for unlimited request)");
+            System.exit(0);
         }
-        BASEPATH = args[1] + "/";
         PORT = Integer.parseInt(args[0]);
-
+        BASEPATH = args[1] + "/";
+        int requestsBeforeShutdown = -1;
+        if(args.length > 2) {
+            requestsBeforeShutdown = args[2] != null ? (Integer.parseInt(args[2])) : -1;
+        }
         ServerSocket serverSocket = null;
         try {
             serverSocket = new ServerSocket(PORT);
@@ -35,22 +41,34 @@ public class HTTPServer {
         System.out.println("connect to http://localhost:" + PORT);
 
         LinkedBlockingQueue<Runnable> requestQueue = new LinkedBlockingQueue<>(8);
-        ThreadPoolExecutor clientExecutor = new ThreadPoolExecutor(COREPOOLSIZE, MAXIMUMPOOLSIZE, KEEPALIVETIME, TimeUnit.SECONDS, requestQueue);
+        ThreadPoolExecutor clientExecutor = new ThreadPoolExecutor(
+                COREPOOLSIZE,
+                MAXIMUMPOOLSIZE,
+                KEEPALIVETIME,
+                TimeUnit.SECONDS,
+                requestQueue);
 
-        int count = 0;
+        int requestCount = 0;
+
         //every client is handled by a thread in the threadpool
-        //waits for 20 clients before shutting down
-        //change while statement to true in order to accept unlimited requests.
-        while(count < 20){
-            try{
-                Socket client = serverSocket.accept();
-                clientExecutor.submit(new RequestHandler(client));
-            }catch (IOException e){
-                e.printStackTrace();
-            }
-            count++;
+        //waits for requestBeforeShutdown requests, o/w handles infinite requests.
+        if(requestsBeforeShutdown != -1) while(requestCount < requestsBeforeShutdown){
+            acceptAndHandle(serverSocket, clientExecutor);
+            requestCount++;
         }
+        else
+            while(true) acceptAndHandle(serverSocket, clientExecutor);
+
         clientExecutor.shutdown();
         serverSocket.close();
+    }
+
+    private static void acceptAndHandle(ServerSocket serverSocket, ThreadPoolExecutor clientExecutor){
+        try{
+            Socket client = serverSocket.accept();
+            clientExecutor.submit(new RequestHandler(client));
+        }catch (IOException e){
+            e.printStackTrace();
+        }
     }
 }
