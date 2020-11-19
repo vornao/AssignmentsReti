@@ -18,16 +18,16 @@ public class HTTPServer {
     static String BASEPATH;
 
     public static void main(String[] args) throws IOException {
-        if(args.length < 2){
-            System.out.println("Usage: -$java ./HTTPServer <PORT> <FILES PATH> <REQUESTS_BEFORE_SHUTDOWN> (optional, leave blank for unlimited request)");
+        if(args.length < 3){
+            System.out.println("Usage: -$java ./HTTPServer <PORT> <FILES PATH> <REQUESTS_BEFORE_SHUTDOWN> (-u for unlimited request)");
             System.exit(0);
         }
         PORT = Integer.parseInt(args[0]);
         BASEPATH = args[1] + "/";
         int requestsBeforeShutdown = -1;
-        if(args.length > 2) {
-            requestsBeforeShutdown = args[2] != null ? (Integer.parseInt(args[2])) : -1;
-        }
+
+        //server will default accept unlimited requests
+        requestsBeforeShutdown = args[2].equals("-u") ?  -1 : (Integer.parseInt(args[2]));
         ServerSocket serverSocket = null;
         try {
             serverSocket = new ServerSocket(PORT);
