@@ -1,8 +1,5 @@
 package Assignment8;
 
-import com.sun.org.apache.bcel.internal.generic.Select;
-import com.sun.tools.corba.se.idl.StringGen;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -29,7 +26,7 @@ import java.util.Set;
 public class EchoWebServer {
     private static int PORT = 6789;
     private static Selector selector = null;
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         if(args.length < 1)
             System.out.println("using default port [" + PORT + "]");
         else PORT = Integer.parseInt(args[0]);
@@ -49,22 +46,16 @@ public class EchoWebServer {
         System.out.println("ECHO SERVER STARTED - PORT: " + PORT);
 
         while(true){
-            try {
-                if (selector.select() == 0) continue;
-                Set<SelectionKey> selectionKeys = selector.selectedKeys();
-                Iterator<SelectionKey> selectionKeyIterator = selectionKeys.iterator();
-                while (selectionKeyIterator.hasNext()) {
-                    SelectionKey key = selectionKeyIterator.next();
-                    selectionKeyIterator.remove();
-                    //register read operation first to read input value.
-                    if (key.isAcceptable()) registerRead(selector, key);
-                    else if (key.isReadable()) readSocketChannel(selector, key);
-                    else if (key.isWritable()) writeSocketChannel(selector, key);
-                }
-
-            }catch(IOException e){
-                //handle broken pipe and connection reset error.
-                e.printStackTrace();
+            if (selector.select() == 0) continue;
+            Set<SelectionKey> selectionKeys = selector.selectedKeys();
+            Iterator<SelectionKey> selectionKeyIterator = selectionKeys.iterator();
+            while (selectionKeyIterator.hasNext()) {
+                SelectionKey key = selectionKeyIterator.next();
+                selectionKeyIterator.remove();
+                //register read operation first to read input value.
+                if (key.isAcceptable()) registerRead(selector, key);
+                else if (key.isReadable()) readSocketChannel(selector, key);
+                else if (key.isWritable()) writeSocketChannel(selector, key);
             }
         }
     }
@@ -86,8 +77,9 @@ public class EchoWebServer {
             sc = (SocketChannel) selectionKey.channel();
             sc.configureBlocking(false);
             ByteBuffer buffer = (ByteBuffer) selectionKey.attachment();
+            //writing buffer with sc bytes
             sc.read(buffer);
-            //ready for read
+            //ready for reading
             buffer.flip();
             while (buffer.hasRemaining()) message.append((char) buffer.get());
             //pos = message.length
@@ -97,8 +89,10 @@ public class EchoWebServer {
                 return;
             }
             buffer.flip();
-            //pos = 0;
+            //pos = 0
+            //ready to read again after get
             sc.register(sel, SelectionKey.OP_WRITE, buffer);
+
         }catch (IOException e){
             System.out.println("Client "+ sc.getRemoteAddress() + " closed connection unexpectedly");
         }
