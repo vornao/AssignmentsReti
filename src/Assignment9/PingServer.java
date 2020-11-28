@@ -1,45 +1,45 @@
 package Assignment9;
 
-import org.apache.commons.cli.*;
-
+import java.awt.*;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Random;
+import java.util.StringTokenizer;
 
-public class PingServer {
-    private static int PORT;
-    private static int MAX_PING_DELAY = 300;
+public class PingServer implements Runnable{
+    private int PORT;
+    private String ADDRESS;
+    private Random random;
+    private int MAX_PING_DELAY;
 
-    public static void main(String[] args) throws SocketException {
-        Options options = new Options();
-        options.addOption("p", "set-port", true, "Server Port");
+    public PingServer(int PORT, String ADDRESS, int DELAY){
+        this.PORT = PORT;
+        this.ADDRESS = ADDRESS;
+        this.MAX_PING_DELAY = DELAY;
+        this.random = new Random();
+    }
 
-        try {
-            CommandLineParser commandLineParser = new DefaultParser();
-            CommandLine commandLine = commandLineParser.parse(options, args);
-            if (commandLine.hasOption("p")) {
-                PORT = Integer.parseInt(commandLine.getOptionValues("p")[0]);
-            }
-        } catch (
-                ParseException p) {
-            System.out.println(p.getMessage());
-        }
-
-        System.out.println("Server ready: port " + PORT);
-        Random random = new Random();
+    public void run(){
         try(DatagramSocket serverSocket = new DatagramSocket(PORT)){
-            serverSocket.setSoTimeout(100000);
             byte[] buf = new byte[1024];
             DatagramPacket recv = new DatagramPacket(buf, buf.length);
             DatagramPacket send;
 
             while(true){
+                Arrays.fill(buf, (byte)0);
                 StringBuilder consoleOutput = new StringBuilder();
                 serverSocket.receive(recv);
+
                 String msg = new String(recv.getData(), 0, recv.getLength(), StandardCharsets.US_ASCII);
+
+                if(!checkMessage(msg)){
+                    System.out.println("String not valid");
+                    continue;
+                }
+
                 consoleOutput.append(recv.getAddress())
                         .append(":> ")
                         .append(recv.getPort())
@@ -64,4 +64,36 @@ public class PingServer {
             e.printStackTrace();
         }
     }
-}
+
+
+    private boolean checkMessage(String msg){
+        int count = 0;
+        StringTokenizer st = new StringTokenizer(msg, " ");
+        if(st.countTokens() > 3) return false;
+        while(st.hasMoreTokens()){
+            switch(count){
+                case 0:
+                    if(!st.nextToken().equals("PING")) return false;
+                    else count++;
+                    break;
+                case 1:
+                    try{
+                        Integer.parseInt(st.nextToken());
+                        count++;
+                    }catch (NumberFormatException e){
+                        return false;
+                    }
+                    break;
+                case 2:
+                    try{
+                        Long.parseLong(st.nextToken());
+                        count++;
+                    }catch (NumberFormatException e) {
+                        return false;
+                    }
+                    break;
+                }
+            }
+        return true;
+        }
+    }
