@@ -40,7 +40,7 @@ public class PingServer implements Runnable{
                     continue;
                 }
 
-                consoleOutput.append(recv.getAddress())
+                consoleOutput.append(recv.getAddress().toString())
                         .append(":> ")
                         .append(recv.getPort())
                         .append(" ")
@@ -51,7 +51,11 @@ public class PingServer implements Runnable{
                 if(random.nextInt(4) != 2) {
                     int sleepTime = random.nextInt(MAX_PING_DELAY);
                     Thread.sleep(sleepTime);
-                    send = new DatagramPacket(msg.getBytes(), msg.getBytes().length, recv.getAddress(), recv.getPort());
+                    send = new DatagramPacket(msg.getBytes(),
+                            msg.getBytes().length,
+                            recv.getAddress(),
+                            recv.getPort());
+
                     serverSocket.send(send);
                     consoleOutput.append("delayed ").append(sleepTime).append(" ms");
                 }else{
@@ -65,7 +69,7 @@ public class PingServer implements Runnable{
         }
     }
 
-
+    //check message content before sending it back.
     private boolean checkMessage(String msg){
         int count = 0;
         StringTokenizer st = new StringTokenizer(msg, " ");

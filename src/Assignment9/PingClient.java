@@ -1,6 +1,5 @@
 package Assignment9;
 
-import org.apache.commons.cli.*;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -9,36 +8,17 @@ import java.util.Collections;
 
 //sender
 public class PingClient {
-    private static String ADDRESS;
-    private static int PORT;
-    private static int PACKETS = 10;
-    private static int TIMEOUT = 1000;
+    private  String ADDRESS;
+    private  int PORT;
+    private  int PACKETS = 10;
+    private  int TIMEOUT = 1000;
 
+    public PingClient(String Address, int Port){
+        this.PORT = Port;
+        this.ADDRESS = Address;
+    }
 
-
-    public static void main(String[] args) throws IOException, InterruptedException {
-        Options options = new Options();
-        options.addOption("n", "set-server", true, "Server Address");
-        options.addOption("p", "set-port", true, "Server Port");
-        HelpFormatter helpFormatter = new HelpFormatter();
-
-        try {
-        CommandLineParser commandLineParser = new DefaultParser();
-        CommandLine commandLine = commandLineParser.parse(options, args);
-            if(args.length < 2) throw new ParseException("Too few arguments");
-
-            if (commandLine.hasOption("n") || commandLine.hasOption("--set-server")) {
-                ADDRESS = (commandLine.getOptionValues("n")[0]);
-            }
-            if (commandLine.hasOption("p")){
-                PORT = Integer.parseInt(commandLine.getOptionValues("p")[0]);
-            }
-        }catch(ParseException p){
-            System.out.println("ERROR: " + p.getMessage());
-            helpFormatter.printHelp("java PingClient", options);
-            System.exit(-1);
-        }
-
+    public void run() throws IOException {
         //System.out.println("Connecting to: " + ADDRESS + ":" + PORT);
         DatagramSocket datagramSocket = new DatagramSocket();
         datagramSocket.setSoTimeout(TIMEOUT);
@@ -46,9 +26,10 @@ public class PingClient {
         DatagramPacket receivedPacket = new DatagramPacket(buf, buf.length);
 
         ArrayList<Integer> rtts = new ArrayList<>(10);
+
         //send 10 pings
         for(int i = 0; i < PACKETS; i++) {
-            //send message: "PING seqno timestamp"
+            //send message: "PING seq_no timestamp"
             StringBuilder pingMessage = new StringBuilder("PING ")
                     .append(i)
                     .append(" ")
@@ -64,6 +45,7 @@ public class PingClient {
             } catch (IOException e){
                 System.out.println("ERROR: " + e.getMessage());
             }
+            System.out.print(pingMessage + " RTT: ");
 
             //wait for echo response
             try{
@@ -75,16 +57,17 @@ public class PingClient {
                         0,
                         receivedPacket.getLength(),
                         StandardCharsets.US_ASCII);
-                //retreive timestamp splitting response string
+                //retrieve timestamp splitting response string
                 long recv_timestamp = Long.parseLong(resp.split(" ")[2]);
-                int diff = (int)(current_timestamp - recv_timestamp);
-
+                int rtt = (int)(current_timestamp - recv_timestamp);
+                System.out.println(rtt + " ms");
                 //add RTT time to RTTs array.
-                rtts.add(diff);
+                rtts.add(rtt);
             }
             catch (SocketTimeoutException e){
                 //response timed out, RTT shall be -1
                 rtts.add(-1);
+                System.out.println("*");
             }
             catch (IOException e){
                 System.out.println("ERROR: " + e.getMessage());
@@ -93,7 +76,7 @@ public class PingClient {
         printStats(rtts);
     }
 
-    private static void printStats(ArrayList<Integer> rtts){
+    private void printStats(ArrayList<Integer> rtts){
         System.out.println("\n\t\t\t\t- - - - PING STATISTICS - - - -");
 
         //format will be: ping sent, ping received, percent loss packets
