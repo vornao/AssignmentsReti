@@ -2,9 +2,8 @@ package Assignment9;
 
 import org.apache.commons.cli.*;
 
-import java.io.IOException;
-
 public class MainClient {
+    private static final int PING_THREADS = 1;
     private static String ADDRESS;
     private static int    PORT;
 
@@ -31,12 +30,10 @@ public class MainClient {
             System.exit(-1);
         }
 
-        PingClient pingClient = new PingClient(ADDRESS, PORT);
-        try{
-            pingClient.run();
+        for(int i = 0 ; i < PING_THREADS; i++) {
+            Thread t = new Thread(new PingClient(ADDRESS, PORT));
+            t.start();
         }
-        catch (IOException E){
-            E.getMessage();
-        }
+
     }
 }

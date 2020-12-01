@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 //sender
-public class PingClient {
+public class PingClient implements Runnable{
     private  String ADDRESS;
     private  int PORT;
     private  int PACKETS = 10;
@@ -18,10 +18,16 @@ public class PingClient {
         this.ADDRESS = Address;
     }
 
-    public void run() throws IOException {
+    public void run() {
+        DatagramSocket datagramSocket;
         //System.out.println("Connecting to: " + ADDRESS + ":" + PORT);
-        DatagramSocket datagramSocket = new DatagramSocket();
-        datagramSocket.setSoTimeout(TIMEOUT);
+        try{
+            datagramSocket = new DatagramSocket();
+            datagramSocket.setSoTimeout(TIMEOUT);
+        }catch(IOException e){
+            e.getMessage();
+            return;
+        }
         byte[] buf = new byte[64];
         DatagramPacket receivedPacket = new DatagramPacket(buf, buf.length);
 
@@ -74,6 +80,7 @@ public class PingClient {
             }
         }
         printStats(rtts);
+        datagramSocket.close();
     }
 
     private void printStats(ArrayList<Integer> rtts){

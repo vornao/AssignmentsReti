@@ -27,7 +27,7 @@ public class MainServer {
         }
 
         System.out.println("Server ready: port " + PORT);
-        pingServer = new PingServer(PORT, ADDRESS, 300);
+        pingServer = new PingServer(PORT, 300);
         Thread t = new Thread(pingServer);
         t.start();
         t.join();

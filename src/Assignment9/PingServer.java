@@ -1,6 +1,5 @@
 package Assignment9;
 
-import java.awt.*;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -11,18 +10,18 @@ import java.util.StringTokenizer;
 
 public class PingServer implements Runnable{
     private int PORT;
-    private String ADDRESS;
     private Random random;
     private int MAX_PING_DELAY;
 
-    public PingServer(int PORT, String ADDRESS, int DELAY){
+    public PingServer(int PORT, int DELAY){
         this.PORT = PORT;
-        this.ADDRESS = ADDRESS;
         this.MAX_PING_DELAY = DELAY;
         this.random = new Random();
     }
 
     public void run(){
+
+        //try with resources block
         try(DatagramSocket serverSocket = new DatagramSocket(PORT)){
             byte[] buf = new byte[1024];
             DatagramPacket recv = new DatagramPacket(buf, buf.length);
@@ -63,7 +62,6 @@ public class PingServer implements Runnable{
                 }
                 System.out.println(consoleOutput.toString());
             }
-
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
