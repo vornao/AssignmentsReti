@@ -13,7 +13,7 @@ public class MulticastTimeClient extends Thread {
     private int port;
     private InetAddress timeGroup;
     private final int length = 64;
-    private MulticastSocket multicastWelcome;
+    private MulticastSocket multicastGroup;
 
     public MulticastTimeClient(String addr, int port) throws UnknownHostException, IllegalArgumentException{
         this.timeGroup = InetAddress.getByName(addr);
@@ -24,22 +24,22 @@ public class MulticastTimeClient extends Thread {
     @Override
     public void interrupt(){
         Thread.currentThread().interrupt();
-        multicastWelcome.close();
+        multicastGroup.close();
     }
 
     public void run(){
-        multicastWelcome = null;
+        multicastGroup = null;
         try {
-            multicastWelcome = new MulticastSocket(this.port);
-            multicastWelcome.joinGroup(this.timeGroup);
+            multicastGroup= new MulticastSocket(this.port);
+            multicastGroup.joinGroup(this.timeGroup);
         } catch (IOException e) {
             e.printStackTrace();
         }
         while(!Thread.currentThread().isInterrupted()) {
             try{
                 DatagramPacket dat = new DatagramPacket(new byte[this.length], length);
-                assert multicastWelcome != null;
-                multicastWelcome.receive(dat);
+                assert multicastGroup != null;
+                multicastGroup.receive(dat);
                 String timestamp = new String(dat.getData(), dat.getOffset(), dat.getLength());
                 printDate(timestamp);
             } catch (IOException e) {
@@ -49,6 +49,7 @@ public class MulticastTimeClient extends Thread {
         }
     }
 
+    //client receives time in millis -> converting millis to human readable date.
     private void printDate(String timestamp){
         Calendar c = Calendar.getInstance();
         try{
