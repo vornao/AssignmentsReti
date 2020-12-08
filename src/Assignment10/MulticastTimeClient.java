@@ -5,7 +5,6 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.UnknownHostException;
-import java.nio.channels.ClosedByInterruptException;
 import java.util.Calendar;
 
 public class MulticastTimeClient extends Thread {
@@ -22,6 +21,7 @@ public class MulticastTimeClient extends Thread {
     }
 
     @Override
+    //interrupt thread and close multicast listener and make it throw closed socket exception.
     public void interrupt(){
         Thread.currentThread().interrupt();
         multicastGroup.close();
@@ -35,6 +35,7 @@ public class MulticastTimeClient extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         while(!Thread.currentThread().isInterrupted()) {
             try{
                 DatagramPacket dat = new DatagramPacket(new byte[this.length], length);
@@ -65,8 +66,6 @@ public class MulticastTimeClient extends Thread {
         }
         catch (NumberFormatException e){
             System.out.println("Wrong timestamp format!");
-            return;
         }
-
     }
 }
