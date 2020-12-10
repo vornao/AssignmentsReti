@@ -6,7 +6,7 @@ import java.net.UnknownHostException;
 public class TimeServerMain {
     private static int port;
     private static String address;
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args){
         address = (args[0]);
         try{
             port = Integer.parseInt(args[1]);
